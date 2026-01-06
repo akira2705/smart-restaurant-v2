@@ -148,7 +148,7 @@
               <!-- CONFIRM (ONLY WHEN PENDING) -->
               <button
                 class="action-btn confirm-btn"
-                *ngIf="res.status === 'PENDING'"
+                [disabled]="res.status !== 'PENDING'"
                 (click)="confirmReservation(res)">
                 ✓ Confirm
               </button>

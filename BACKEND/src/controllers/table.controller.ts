@@ -32,7 +32,7 @@ export const createTable = async (req: Request, res: Response) => {
 export const getAllTables = async (req: Request, res: Response) => {
   try {
     const stmt = db.prepare(
-      "SELECT id, table_number, capacity, type, status FROM tables_reservations ORDER BY table_number"
+      "SELECT id, table_number, capacity, type, status, current_customer_id FROM tables_reservations ORDER BY table_number"
     );
     const rows = stmt.all();
 

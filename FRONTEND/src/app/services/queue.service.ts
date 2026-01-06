@@ -17,12 +17,22 @@ export class QueueService {
     return this.http.get<any>(this.baseUrl);
   }
 
+  // GET /api/queue/length
+  getQueueLength(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/length`);
+  }
+
   // POST /api/queue/join
   joinQueue(data: any): Observable<any> {
     return this.http.post<any>(
       `${this.baseUrl}/join`,
       data
     );
+  }
+
+  // POST /api/queue/leave
+  leaveQueue(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/leave`, data);
   }
 
   // PUT /api/queue/seat
