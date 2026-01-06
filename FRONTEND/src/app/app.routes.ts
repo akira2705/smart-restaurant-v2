@@ -7,6 +7,8 @@ import { ReservationComponent } from "./pages/reservation/reservation.component"
 import { ManagerComponent } from "./pages/manager/manager.component";
 import { LoginComponent } from "./login/login.component";
 import { TableOrdersComponent } from "./pages/table-orders/table-orders.component";
+import { authGuard } from "./guards/auth.guard";
+import { managerGuard } from "./guards/manager.guard";
 
 export const routes: Routes = [
   // LOGIN FIRST
@@ -19,6 +21,12 @@ export const routes: Routes = [
   { path: "reserve", component: ReservationComponent },
   { path: "table-orders", component: TableOrdersComponent },
   { path: "manager", component: ManagerComponent },
+  { path: "", component: DashboardComponent, canActivate: [authGuard] },
+  { path: "tables", component: TablesComponent, canActivate: [authGuard] },
+  { path: "queue", component: QueueComponent, canActivate: [authGuard] },
+  { path: "reserve", component: ReservationComponent, canActivate: [authGuard] },
+  { path: "table-orders", component: TableOrdersComponent, canActivate: [authGuard] },
+  { path: "manager", component: ManagerComponent, canActivate: [authGuard, managerGuard] },
 
   // FALLBACK
   { path: "**", redirectTo: "login" },

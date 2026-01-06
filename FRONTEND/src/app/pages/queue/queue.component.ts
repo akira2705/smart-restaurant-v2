@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { QueueService } from '../../services/queue.service';
+import { UserService } from '../../services/user.service';
 import { Subject, interval, takeUntil } from 'rxjs';
 
 @Component({
@@ -17,14 +18,17 @@ export class QueueComponent implements OnInit, OnDestroy {
 
   loading = false;
   queueList: any[] = [];
+  currentUser: any = null;
   private destroy$ = new Subject<void>();
 
   constructor(
     private queueService: QueueService,
+    private userService: UserService,
     private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
+    this.loadCurrentUser();
     this.fetchQueueList();
     interval(5000).pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.fetchQueueList();
@@ -34,6 +38,17 @@ export class QueueComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  loadCurrentUser(): void {
+    this.userService.getCurrentUser().subscribe({
+      next: (user) => {
+        this.currentUser = user;
+      },
+      error: () => {
+        this.currentUser = null;
+      }
+    });
   }
 
   fetchQueueList(): void {
@@ -60,6 +75,7 @@ export class QueueComponent implements OnInit, OnDestroy {
     const payload = {
       party_size: 4,
       name: `Guest ${this.queueList.length + 1}`
+      party_size: 4
     };
 
     this.queueService.joinQueue(payload).subscribe({
@@ -80,6 +96,7 @@ export class QueueComponent implements OnInit, OnDestroy {
     this.loading = true;
     const targetId = this.queueList[0]?.id;
     this.queueService.leaveQueue({ queue_id: targetId }).subscribe({
+    this.queueService.leaveQueue().subscribe({
       next: (res: any) => {
         this.loading = false;
         this.snackBar.open(res.message || 'Left the queue', 'OK', { duration: 3000 });
@@ -95,6 +112,9 @@ export class QueueComponent implements OnInit, OnDestroy {
 
   canLeaveQueue(): boolean {
     return this.queueList.length > 0;
+  isCurrentUserInQueue(): boolean {
+    if (!this.currentUser) return false;
+    return this.queueList.some(item => item.user_id === this.currentUser.id);
   }
 
   callCustomer(item: any): void {

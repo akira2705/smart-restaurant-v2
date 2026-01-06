@@ -22,6 +22,8 @@ router.post(
 // MANAGER ONLY — CANCEL (UNRESERVE TABLE)
 router.post(
   "/:id/cancel",
+  firebaseAuth,
+  requireRole("MANAGER"),
   cancelReservation
 );
 
