@@ -9,6 +9,7 @@ import tableRoutes from "./routes/table.routes";
 import queueRoutes from "./routes/queue.routes";
 import { errorHandler } from "./middlewares/error.middleware";
 import reservationRoutes from "./routes/reservation.routes";
+import managerRoutes from "./routes/manager.routes";
 
 
 const app: Application = express();
@@ -22,6 +23,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/tables", tableRoutes);
 app.use("/api/queue", queueRoutes);
 app.use("/reservations", reservationRoutes);
+app.use("/api/manager", managerRoutes);
+
 
 // Health check route
 app.get("/", (req, res) => {

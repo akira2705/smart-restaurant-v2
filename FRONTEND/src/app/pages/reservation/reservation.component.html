@@ -7,6 +7,7 @@
   </section>
 
   <div class="reservation-container">
+
     <!-- Reservation Stats -->
     <div class="stats-grid">
       <div class="stat-card">
@@ -16,6 +17,7 @@
           <div class="stat-value">{{ getTotalReservations() }}</div>
         </div>
       </div>
+
       <div class="stat-card">
         <div class="stat-icon today-icon">📆</div>
         <div class="stat-info">
@@ -23,6 +25,7 @@
           <div class="stat-value">{{ getTodayReservations() }}</div>
         </div>
       </div>
+
       <div class="stat-card">
         <div class="stat-icon pending-icon">⏳</div>
         <div class="stat-info">
@@ -33,6 +36,7 @@
     </div>
 
     <div class="sections-wrapper">
+
       <!-- Booking Form -->
       <div class="booking-form-section">
         <div class="section-header">
@@ -83,8 +87,12 @@
 
           <div class="form-group">
             <label class="form-label">Special Requests</label>
-            <textarea class="form-input form-textarea" rows="3"
-              [(ngModel)]="form.notes" name="notes"></textarea>
+            <textarea
+              class="form-input form-textarea"
+              rows="3"
+              [(ngModel)]="form.notes"
+              name="notes">
+            </textarea>
           </div>
 
           <button type="submit" class="submit-btn" [disabled]="loading">
@@ -113,25 +121,22 @@
                 <div class="guest-contact">{{ res.email }} • {{ res.phone }}</div>
               </div>
 
-              <!-- FIXED STATUS BADGE -->
-              <span class="status-badge"
-                    [ngClass]="'status-' + res.status.toLowerCase()">
+              <span
+                class="status-badge"
+                [ngClass]="'status-' + res.status.toLowerCase()">
                 {{ res.status }}
               </span>
             </div>
 
             <div class="reservation-details">
-              <div class="detail-item">
-                📅 {{ res.date | date:'MMM dd, yyyy' }}
-              </div>
-              <div class="detail-item">
-                🕐 {{ res.time }}
-              </div>
-              <div class="detail-item">
-                👥 {{ res.guests }} guests
-              </div>
-              <div class="detail-item">
-                🍽️ {{ res.tableType }}
+              <div class="detail-item">📅 {{ res.date | date:'MMM dd, yyyy' }}</div>
+              <div class="detail-item">🕐 {{ res.time }}</div>
+              <div class="detail-item">👥 {{ res.guests }} guests</div>
+              <div class="detail-item">🍽️ {{ res.tableType }}</div>
+
+              <!-- ✅ ASSIGNED TABLE -->
+              <div class="detail-item" *ngIf="res.table_number">
+                🪑 Table {{ res.table_number }}
               </div>
             </div>
 
@@ -140,15 +145,19 @@
             </div>
 
             <div class="reservation-actions">
-              <!-- 🔴 FIXED -->
-              <button class="action-btn confirm-btn"
-                      *ngIf="res.status === 'PENDING'"
-                      (click)="confirmReservation(res)">
+              <!-- CONFIRM (ONLY WHEN PENDING) -->
+              <button
+                class="action-btn confirm-btn"
+                *ngIf="res.status === 'PENDING'"
+                (click)="confirmReservation(res)">
                 ✓ Confirm
               </button>
 
-              <button class="action-btn cancel-btn"
-                      (click)="cancelReservation(res)">
+              <!-- CANCEL (ONLY WHEN CONFIRMED) -->
+              <button
+                class="action-btn cancel-btn"
+                *ngIf="res.status === 'CONFIRMED'"
+                (click)="cancelReservation(res)">
                 ✕ Cancel
               </button>
             </div>
@@ -160,6 +169,7 @@
           <p>No reservations yet</p>
         </div>
       </div>
+
     </div>
   </div>
 </div>

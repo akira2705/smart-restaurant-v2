@@ -1,0 +1,28 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    <h2 class="title">Welcome Back</h2>
+    <p class="subtitle">Login to SmartRestaurant</p>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input
+        type="email"
+        placeholder="manager@test.com"
+        [(ngModel)]="email"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <input
+        type="password"
+        placeholder="••••••••"
+        [(ngModel)]="password"
+      />
+    </div>
+
+    <button class="login-btn" (click)="login()">Login</button>
+
+    <p class="error" *ngIf="error">{{ error }}</p>
+  </div>
+</div>
