@@ -73,6 +73,8 @@ export class QueueComponent implements OnInit, OnDestroy {
   joinQueue(): void {
     this.loading = true;
     const payload = {
+      party_size: 4,
+      name: `Guest ${this.queueList.length + 1}`
       party_size: 4
     };
 
@@ -92,6 +94,8 @@ export class QueueComponent implements OnInit, OnDestroy {
 
   leaveQueue(): void {
     this.loading = true;
+    const targetId = this.queueList[0]?.id;
+    this.queueService.leaveQueue({ queue_id: targetId }).subscribe({
     this.queueService.leaveQueue().subscribe({
       next: (res: any) => {
         this.loading = false;
@@ -106,6 +110,8 @@ export class QueueComponent implements OnInit, OnDestroy {
     });
   }
 
+  canLeaveQueue(): boolean {
+    return this.queueList.length > 0;
   isCurrentUserInQueue(): boolean {
     if (!this.currentUser) return false;
     return this.queueList.some(item => item.user_id === this.currentUser.id);

@@ -15,6 +15,12 @@ export const routes: Routes = [
   { path: "login", component: LoginComponent },
 
   // PROTECTED APP ROUTES
+  { path: "", component: DashboardComponent },
+  { path: "tables", component: TablesComponent },
+  { path: "queue", component: QueueComponent },
+  { path: "reserve", component: ReservationComponent },
+  { path: "table-orders", component: TableOrdersComponent },
+  { path: "manager", component: ManagerComponent },
   { path: "", component: DashboardComponent, canActivate: [authGuard] },
   { path: "tables", component: TablesComponent, canActivate: [authGuard] },
   { path: "queue", component: QueueComponent, canActivate: [authGuard] },

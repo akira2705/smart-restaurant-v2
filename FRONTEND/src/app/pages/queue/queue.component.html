@@ -43,6 +43,7 @@
           </button>
           <button
             class="join-queue-btn"
+            *ngIf="canLeaveQueue()"
             *ngIf="isCurrentUserInQueue()"
             (click)="leaveQueue()"
             [disabled]="loading">

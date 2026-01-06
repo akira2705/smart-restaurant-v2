@@ -32,6 +32,7 @@ export class LoginComponent {
       const token = await cred.user.getIdToken();
       localStorage.setItem("token", token);
 
+      this.router.navigate(["/reserve"]);
       const user = await firstValueFrom(this.userService.getCurrentUser());
       const role = user?.role;
       if (role) {
