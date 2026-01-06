@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { QueueService } from '../../services/queue.service';
+import { Subject, interval, takeUntil } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -12,10 +13,21 @@ import { QueueService } from '../../services/queue.service';
   templateUrl: './queue.component.html',
   styleUrls: ['./queue.component.css']
 })
-export class QueueComponent implements OnInit {
+interface QueueItem {
+  id: number;
+  user_id: number | null;
+  user_name: string | null;
+  party_size: number;
+  phone: string | null;
+  status: string;
+  joined_at: string;
+}
+
+export class QueueComponent implements OnInit, OnDestroy {
 
   loading = false;
-  queueList: any[] = [];
+  queueList: QueueItem[] = [];
+  private destroy$ = new Subject<void>();
 
   constructor(
     private queueService: QueueService,
@@ -24,6 +36,14 @@ export class QueueComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchQueueList();
+    interval(5000).pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.fetchQueueList();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   fetchQueueList(): void {
@@ -48,8 +68,8 @@ export class QueueComponent implements OnInit {
   joinQueue(): void {
     this.loading = true;
     const payload = {
-      user_id: 1,
-      party_size: 4
+      party_size: 4,
+      name: `Guest ${this.queueList.length + 1}`
     };
 
     this.queueService.joinQueue(payload).subscribe({
@@ -66,8 +86,29 @@ export class QueueComponent implements OnInit {
     });
   }
 
-  callCustomer(item: any): void {
-    this.snackBar.open(`Called ${item.customer_name || 'Guest'}`, 'OK', { duration: 2000 });
+  leaveQueue(): void {
+    this.loading = true;
+    const targetId = this.queueList[0]?.id;
+    this.queueService.leaveQueue({ queue_id: targetId }).subscribe({
+      next: (res: any) => {
+        this.loading = false;
+        this.snackBar.open(res.message || 'Left the queue', 'OK', { duration: 3000 });
+        this.fetchQueueList();
+      },
+      error: (err: any) => {
+        this.loading = false;
+        const msg = err.error?.message || 'Failed to leave queue';
+        this.snackBar.open(msg, 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  canLeaveQueue(): boolean {
+    return this.queueList.length > 0;
+  }
+
+  callCustomer(item: QueueItem): void {
+    this.snackBar.open(`Called ${item.user_name || 'Guest'}`, 'OK', { duration: 2000 });
   }
 
   getTotalQueueCount(): number {
@@ -80,7 +121,10 @@ export class QueueComponent implements OnInit {
 
   getAverageWaitTime(): number {
     if (this.queueList.length === 0) return 0;
-    const total = this.queueList.reduce((sum, item) => sum + this.getWaitTime(item.joined_at), 0);
+    const total = this.queueList.reduce(
+      (sum: number, item: QueueItem) => sum + this.getWaitTime(item.joined_at),
+      0
+    );
     return Math.round(total / this.queueList.length);
   }
 

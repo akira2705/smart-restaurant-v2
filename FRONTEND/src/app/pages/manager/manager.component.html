@@ -7,12 +7,20 @@
   </section>
 
   <div class="manager-container">
+    <div *ngIf="errorMessage" class="error-state">
+      {{ errorMessage }}
+    </div>
     <!-- Key Metrics -->
     <div class="metrics-grid">
       <div class="metric-card">
         <div class="metric-label">Queue</div>
         <div class="metric-value">{{ getQueueCount() }}</div>
         <div class="metric-subtext">waiting</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Pending</div>
+        <div class="metric-value">{{ dashboard?.pendingReservations || 0 }}</div>
+        <div class="metric-subtext">reservations</div>
       </div>
       <div class="metric-card">
         <div class="metric-label">Available</div>

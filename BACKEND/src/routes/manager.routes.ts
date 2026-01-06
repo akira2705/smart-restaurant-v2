@@ -1,7 +1,5 @@
 import { Router } from "express";
 import { db } from "../services/db.service";
-import firebaseAuth from "../middlewares/firebaseAuth.middleware";
-import { requireRole } from "../middlewares/role.middleware";
 
 const router = Router();
 
@@ -10,8 +8,6 @@ const router = Router();
 */
 router.get(
   "/dashboard",
-  firebaseAuth,
-  requireRole("MANAGER"),
   (req, res) => {
 
     const totalTables = (
@@ -32,6 +28,12 @@ router.get(
       ).get() as { count: number }
     ).count;
 
+    const occupiedTables = (
+      db.prepare(
+        "SELECT COUNT(*) as count FROM tables_reservations WHERE status = 'OCCUPIED'"
+      ).get() as { count: number }
+    ).count;
+
     const pendingReservations = (
       db.prepare(
         "SELECT COUNT(*) as count FROM reservations WHERE status = 'PENDING'"
@@ -42,6 +44,7 @@ router.get(
       totalTables,
       availableTables,
       reservedTables,
+      occupiedTables,
       pendingReservations
     });
   }

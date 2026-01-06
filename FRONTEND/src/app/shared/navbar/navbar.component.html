@@ -7,5 +7,7 @@
   <button mat-button routerLink="/tables">Tables</button>
   <button mat-button routerLink="/queue">Queue</button>
   <button mat-button routerLink="/reserve">Reserve</button>
+  <button mat-button routerLink="/table-orders">Table Orders</button>
   <button mat-button routerLink="/manager">Manager</button>
+  <button mat-button *ngIf="isAuthenticated()" (click)="logout()">Logout</button>
 </mat-toolbar>

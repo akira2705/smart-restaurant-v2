@@ -6,6 +6,7 @@ import { QueueComponent } from "./pages/queue/queue.component";
 import { ReservationComponent } from "./pages/reservation/reservation.component";
 import { ManagerComponent } from "./pages/manager/manager.component";
 import { LoginComponent } from "./login/login.component";
+import { TableOrdersComponent } from "./pages/table-orders/table-orders.component";
 
 export const routes: Routes = [
   // LOGIN FIRST
@@ -16,6 +17,7 @@ export const routes: Routes = [
   { path: "tables", component: TablesComponent },
   { path: "queue", component: QueueComponent },
   { path: "reserve", component: ReservationComponent },
+  { path: "table-orders", component: TableOrdersComponent },
   { path: "manager", component: ManagerComponent },
 
   // FALLBACK

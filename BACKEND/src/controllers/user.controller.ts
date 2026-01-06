@@ -3,16 +3,16 @@ import { db } from "../services/db.service";
 
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { name, role, contact_info } = req.body;
+    const { name, role, contact_info, email, phone } = req.body;
 
     if (!name || !role) {
       return res.status(400).json({ message: "Name and role are required" });
     }
 
     const stmt = db.prepare(
-      "INSERT INTO users (name, role, contact_info) VALUES (?, ?, ?)"
+      "INSERT INTO users (name, email, phone, role, contact_info) VALUES (?, ?, ?, ?, ?)"
     );
-    const result = stmt.run(name, role, contact_info || null);
+    const result = stmt.run(name, email || null, phone || null, role, contact_info || null);
 
     return res.status(201).json({
       message: "User created successfully",
