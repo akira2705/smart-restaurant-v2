@@ -131,7 +131,10 @@ export class QueueComponent implements OnInit, OnDestroy {
 
   getAverageWaitTime(): number {
     if (this.queueList.length === 0) return 0;
-    const total = this.queueList.reduce((sum, item) => sum + this.getWaitTime(item.joined_at), 0);
+    const total = this.queueList.reduce(
+      (sum: number, item: QueueItem) => sum + this.getWaitTime(item.joined_at),
+      0
+    );
     return Math.round(total / this.queueList.length);
   }
 

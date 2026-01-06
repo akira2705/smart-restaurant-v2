@@ -166,7 +166,7 @@ export const leaveQueue: RequestHandler = async (req, res) => {
     });
   } catch (error: any) {
     return res.status(500).json({
-      message: "Failed to join queue",
+      message: "Failed to leave queue",
       error: error.message
     });
   }
