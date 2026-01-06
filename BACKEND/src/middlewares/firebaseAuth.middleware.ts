@@ -12,6 +12,7 @@ export interface AuthRequest extends Request {
   user?: {
     email: string;
     role: 'USER' | 'MANAGER';
+    name?: string;
   };
 }
 
@@ -36,15 +37,19 @@ export default async function firebaseAuth(
       return res.status(401).json({ message: 'Invalid token' });
     }
 
-    const user = db
-      .prepare(`SELECT role FROM users WHERE email = ?`)
-      .get(email) as { role: 'USER' | 'MANAGER' } | undefined;
+    let user = db
+      .prepare(`SELECT role, name FROM users WHERE email = ?`)
+      .get(email) as { role: 'USER' | 'MANAGER'; name: string } | undefined;
 
     if (!user) {
-      return res.status(403).json({ message: 'User not registered' });
+      const fallbackName = decoded.name || email.split("@")[0] || "Guest";
+      db.prepare(
+        `INSERT INTO users (name, email, role) VALUES (?, ?, ?)`
+      ).run(fallbackName, email, "USER");
+      user = { role: "USER", name: fallbackName };
     }
 
-    req.user = { email, role: user.role };
+    req.user = { email, role: user.role, name: user.name };
     next();
   } catch {
     return res.status(401).json({ message: 'Token verification failed' });

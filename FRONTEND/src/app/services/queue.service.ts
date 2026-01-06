@@ -33,6 +33,8 @@ export class QueueService {
   // POST /api/queue/leave
   leaveQueue(data: any): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/leave`, data);
+  leaveQueue(): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/leave`, {});
   }
 
   // PUT /api/queue/seat

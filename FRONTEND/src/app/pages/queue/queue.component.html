@@ -44,6 +44,7 @@
           <button
             class="join-queue-btn"
             *ngIf="canLeaveQueue()"
+            *ngIf="isCurrentUserInQueue()"
             (click)="leaveQueue()"
             [disabled]="loading">
             Leave Queue
@@ -80,7 +81,7 @@
       <div *ngIf="!loading && queueList.length === 0" class="empty-state">
         <div class="empty-icon">🪑</div>
         <p>Queue is empty</p>
-        <button class="join-queue-btn primary" (click)="openJoinDialog()">
+        <button class="join-queue-btn primary" (click)="openJoinDialog()" *ngIf="!isCurrentUserInQueue()">
           Add First Customer to Queue
         </button>
       </div>
