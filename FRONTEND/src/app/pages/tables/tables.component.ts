@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { TableService } from '../../services/table.service';
+import { Subject, interval, takeUntil } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -10,16 +11,25 @@ import { TableService } from '../../services/table.service';
   templateUrl: './tables.component.html',
   styleUrls: ['./tables.component.css']
 })
-export class TablesComponent implements OnInit {
+export class TablesComponent implements OnInit, OnDestroy {
 
   tables: any[] = [];
   loading = true;
   selectedTable: any = null;
+  private destroy$ = new Subject<void>();
 
   constructor(private tableService: TableService) {}
 
   ngOnInit(): void {
     this.fetchTables();
+    interval(5000).pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.fetchTables();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   fetchTables(): void {

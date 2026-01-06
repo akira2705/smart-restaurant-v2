@@ -1,0 +1,49 @@
+<div class="table-orders-page">
+  <section class="page-header">
+    <div class="header-content">
+      <h1>Table Orders</h1>
+      <p>Live view of table orders, dining status, and totals</p>
+    </div>
+  </section>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading tables</p>
+  </div>
+
+  <div *ngIf="!loading && tables.length === 0" class="empty-state">
+    <p>No tables available.</p>
+  </div>
+
+  <div *ngIf="!loading && tables.length > 0" class="tables-grid">
+    <div *ngFor="let table of tables" class="table-card">
+      <div class="card-header">
+        <div class="table-title">Table {{ table.table_number }}</div>
+        <span class="status-pill">
+          {{ getStageLabel(orderStates.get(table.id)?.stage || 'ORDERING') }}
+        </span>
+      </div>
+
+      <div class="orders-section">
+        <div *ngIf="(orderStates.get(table.id)?.orders?.length || 0) > 0" class="orders-list">
+          <div *ngFor="let order of orderStates.get(table.id)?.orders" class="order-item">
+            <div class="order-name">{{ order.name }}</div>
+            <div class="order-meta">
+              <span class="order-qty">x{{ order.quantity }}</span>
+              <span class="order-price">₹{{ order.price }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="(orderStates.get(table.id)?.orders?.length || 0) === 0" class="orders-empty">
+          <p>No active orders</p>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <div class="total-label">Total</div>
+        <div class="total-value">₹{{ orderStates.get(table.id)?.total || 0 }}</div>
+      </div>
+    </div>
+  </div>
+</div>

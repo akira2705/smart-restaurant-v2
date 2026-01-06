@@ -6,13 +6,14 @@ import {
   reserveTable,
   cancelReservation
 } from "../controllers/table.controller";
+import firebaseAuth from "../middlewares/firebaseAuth.middleware";
 
 const router = Router();
 
-router.post("/", createTable);
-router.get("/", getAllTables);
-router.put("/:id/status", updateTableStatus);
-router.post("/reserve", reserveTable);
-router.put("/:table_id/cancel", cancelReservation);
+router.post("/", firebaseAuth, createTable);
+router.get("/", firebaseAuth, getAllTables);
+router.put("/:id/status", firebaseAuth, updateTableStatus);
+router.post("/reserve", firebaseAuth, reserveTable);
+router.put("/:table_id/cancel", firebaseAuth, cancelReservation);
 
 export default router;

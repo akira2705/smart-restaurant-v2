@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { QueueService } from '../../services/queue.service';
+import { ManagerService } from '../../services/manager.service';
+import { Subject, interval, takeUntil } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -10,48 +12,66 @@ import { QueueService } from '../../services/queue.service';
   templateUrl: './manager.component.html',
   styleUrls: ['./manager.component.css']
 })
-export class ManagerComponent implements OnInit {
+export class ManagerComponent implements OnInit, OnDestroy {
 
   loading = false;
-  queueList: any[] = [];
-  tablesList: any[] = [];
+  queueCount = 0;
+  dashboard: any = null;
   recentActivities: any[] = [];
+  errorMessage = '';
+  private destroy$ = new Subject<void>();
 
   constructor(
     private queueService: QueueService,
+    private managerService: ManagerService,
     private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
     this.loadDashboardData();
+    interval(5000).pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.loadDashboardData();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadDashboardData(): void {
     this.loading = true;
-    setTimeout(() => {
-      this.queueList = [
-        { id: 1, name: 'John Doe', party_size: 4, status: 'waiting' },
-        { id: 2, name: 'Jane Smith', party_size: 2, status: 'waiting' }
-      ];
-      this.tablesList = [
-        { id: 1, capacity: 6, status: 'occupied' },
-        { id: 2, capacity: 4, status: 'available' },
-        { id: 3, capacity: 4, status: 'reserved' },
-        { id: 4, capacity: 2, status: 'occupied' },
-        { id: 5, capacity: 6, status: 'available' },
-        { id: 6, capacity: 8, status: 'occupied' }
-      ];
-      this.recentActivities = [
-        { type: 'seat', icon: '👥', title: 'Seated Table 1', time: '2 mins ago' },
-        { type: 'queue', icon: '📋', title: 'New customer joined queue', time: '5 mins ago' },
-        { type: 'reserve', icon: '📅', title: 'Reservation confirmed', time: '15 mins ago' }
-      ];
-      this.loading = false;
-    }, 300);
+    this.errorMessage = '';
+
+    this.managerService.getDashboard().subscribe({
+      next: (data) => {
+        this.dashboard = data;
+        this.fetchQueueCount();
+      },
+      error: (err) => {
+        console.error('Failed to load dashboard', err);
+        this.loading = false;
+        this.errorMessage = err.error?.message || 'Failed to load dashboard';
+      }
+    });
+  }
+
+  fetchQueueCount(): void {
+    this.queueService.getQueueLength().subscribe({
+      next: (res: any) => {
+        this.queueCount = res.count || 0;
+        this.loading = false;
+      },
+      error: (err: any) => {
+        console.error('Failed to load queue count', err);
+        this.queueCount = 0;
+        this.loading = false;
+      }
+    });
   }
 
   seatNextCustomer(): void {
-    if (this.queueList.length === 0) {
+    if (this.queueCount === 0) {
       this.snackBar.open('No customers in queue', 'OK', { duration: 3000 });
       return;
     }
@@ -60,7 +80,7 @@ export class ManagerComponent implements OnInit {
       next: (res: any) => {
         this.loading = false;
         this.snackBar.open(res.message || 'Customer seated successfully', 'OK', { duration: 3000 });
-        this.queueList.shift();
+        this.fetchQueueCount();
       },
       error: (err: any) => {
         this.loading = false;
@@ -83,31 +103,31 @@ export class ManagerComponent implements OnInit {
   }
 
   getQueueCount(): number {
-    return this.queueList.length;
+    return this.queueCount;
   }
 
   getAvailableTables(): number {
-    return this.tablesList.filter(t => t.status === 'available').length;
+    return this.dashboard?.availableTables || 0;
   }
 
   getReservedTables(): number {
-    return this.tablesList.filter(t => t.status === 'reserved').length;
+    return this.dashboard?.reservedTables || 0;
   }
 
   getOccupiedTables(): number {
-    return this.tablesList.filter(t => t.status === 'occupied').length;
+    return this.dashboard?.occupiedTables || 0;
   }
 
   getOccupancyRate(): number {
-    if (this.tablesList.length === 0) return 0;
-    return Math.round((this.getOccupiedTables() / this.tablesList.length) * 100);
+    if (!this.dashboard?.totalTables) return 0;
+    return Math.round((this.getOccupiedTables() / this.dashboard.totalTables) * 100);
   }
 
   getAvgWaitTime(): number {
-    return this.queueList.length > 0 ? Math.ceil(this.queueList.length * 2.5) : 0;
+    return this.queueCount > 0 ? Math.ceil(this.queueCount * 2.5) : 0;
   }
 
   getLongestWait(): number {
-    return this.getAvgWaitTime() + (this.queueList.length > 2 ? 10 : 0);
+    return this.getAvgWaitTime() + (this.queueCount > 2 ? 10 : 0);
   }
 }
