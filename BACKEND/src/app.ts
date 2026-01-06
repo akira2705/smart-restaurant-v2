@@ -22,7 +22,7 @@ app.use(express.json());
 app.use("/api/users", userRoutes);
 app.use("/api/tables", tableRoutes);
 app.use("/api/queue", queueRoutes);
-app.use("/reservations", reservationRoutes);
+app.use("/api/reservations", reservationRoutes);
 app.use("/api/manager", managerRoutes);
 
 

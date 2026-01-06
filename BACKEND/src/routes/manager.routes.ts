@@ -32,6 +32,12 @@ router.get(
       ).get() as { count: number }
     ).count;
 
+    const occupiedTables = (
+      db.prepare(
+        "SELECT COUNT(*) as count FROM tables_reservations WHERE status = 'OCCUPIED'"
+      ).get() as { count: number }
+    ).count;
+
     const pendingReservations = (
       db.prepare(
         "SELECT COUNT(*) as count FROM reservations WHERE status = 'PENDING'"
@@ -42,6 +48,7 @@ router.get(
       totalTables,
       availableTables,
       reservedTables,
+      occupiedTables,
       pendingReservations
     });
   }
