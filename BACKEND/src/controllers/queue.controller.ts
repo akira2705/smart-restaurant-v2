@@ -1,3 +1,4 @@
+import { RequestHandler } from "express";
 import { Response } from "express";
 import { db } from "../services/db.service";
 import { AuthRequest } from "../middlewares/firebaseAuth.middleware";
@@ -43,8 +44,108 @@ export const getQueueLength = async (_req: Request, res: Response) => {
   }
 };
 
-export const joinQueue = async (req: Request, res: Response) => {
+export const getQueue: RequestHandler = async (_req, res) => {
   try {
+    const rows = db.prepare(`
+      SELECT
+        id,
+        user_id,
+        user_name,
+        party_size,
+        phone,
+        status,
+        created_at as joined_at
+      FROM queue
+      WHERE status = 'WAITING'
+      ORDER BY created_at ASC
+    `).all();
+
+    res.status(200).json({ data: rows, count: rows.length });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: "Failed to fetch queue",
+      error: error.message
+    });
+  }
+};
+
+export const getQueueLength: RequestHandler = async (_req, res) => {
+  try {
+    const count = (
+      db.prepare("SELECT COUNT(*) as count FROM queue WHERE status = 'WAITING'")
+        .get() as { count: number }
+    ).count;
+
+    res.status(200).json({ count });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: "Failed to fetch queue length",
+      error: error.message
+    });
+  }
+};
+
+export const joinQueue: RequestHandler = async (req, res) => {
+  try {
+    const { party_size, phone, name } = req.body;
+
+    if (!party_size) {
+      return res.status(400).json({ message: "Party size is required" });
+    }
+
+    const userName = name || "Guest";
+
+    const insertStmt = db.prepare(`
+      INSERT INTO queue (user_id, user_name, party_size, phone, status)
+      VALUES (?, ?, ?, ?, 'WAITING')
+    `);
+    const result = insertStmt.run(null, userName, party_size, phone || null);
+
+    return res.status(201).json({
+      message: "Joined queue successfully",
+      queueId: result.lastInsertRowid
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: "Failed to join queue",
+      error: error.message
+    });
+  }
+};
+
+export const leaveQueue: RequestHandler = async (req, res) => {
+  try {
+    const { queue_id } = req.body;
+
+    let targetId = queue_id as number | undefined;
+
+    if (!targetId) {
+      const queued = db.prepare(`
+        SELECT id
+        FROM queue
+        WHERE status = 'WAITING'
+        ORDER BY created_at ASC
+        LIMIT 1
+      `).get() as { id: number } | undefined;
+
+      targetId = queued?.id;
+    }
+
+    if (!targetId) {
+      return res.status(404).json({ message: "No customers in queue" });
+    }
+
+    const result = db.prepare(`
+      UPDATE queue
+      SET status = 'CANCELLED'
+      WHERE id = ? AND status = 'WAITING'
+    `).run(targetId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ message: "Customer not in queue" });
+    }
+
+    return res.status(200).json({ message: "Left queue successfully" });
     const { party_size, phone, name } = req.body;
 
     if (!party_size) {
@@ -195,6 +296,8 @@ export const joinQueue = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const seatFromQueue: RequestHandler = async (_req, res) => {
+  try {
 export const seatFromQueue = async (_req: Request, res: Response) => {
 export const leaveQueue = async (req: AuthRequest, res: Response) => {
   try {
