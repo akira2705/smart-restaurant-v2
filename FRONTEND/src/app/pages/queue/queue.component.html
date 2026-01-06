@@ -36,10 +36,19 @@
     <div class="queue-list-section">
       <div class="section-header">
         <h2>Waiting Customers</h2>
-        <button class="join-queue-btn" (click)="openJoinDialog()" [disabled]="loading">
-          <span class="btn-icon">+</span>
-          {{ loading ? 'Adding...' : 'Add to Queue' }}
-        </button>
+        <div class="queue-actions">
+          <button class="join-queue-btn" (click)="openJoinDialog()" [disabled]="loading">
+            <span class="btn-icon">+</span>
+            {{ loading ? 'Adding...' : 'Add to Queue' }}
+          </button>
+          <button
+            class="join-queue-btn"
+            *ngIf="canLeaveQueue()"
+            (click)="leaveQueue()"
+            [disabled]="loading">
+            Leave Queue
+          </button>
+        </div>
       </div>
 
       <div *ngIf="loading" class="loading-state">
@@ -51,7 +60,7 @@
         <div *ngFor="let item of queueList; let i = index" class="queue-item" [ngClass]="'position-' + (i + 1)">
           <div class="queue-position">{{ i + 1 }}</div>
           <div class="queue-details">
-            <div class="customer-name">{{ item.customer_name || 'Guest ' + item.user_id }}</div>
+            <div class="customer-name">{{ item.user_name || 'Guest ' + item.user_id }}</div>
             <div class="queue-meta">
               <span class="party-size">{{ item.party_size }} guests</span>
               <span class="wait-time">Wait: {{ getWaitTime(item.joined_at) }} min</span>

@@ -49,6 +49,23 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
   );
+
+  -- Reservations table
+  CREATE TABLE IF NOT EXISTS reservations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT,
+    reservation_date TEXT NOT NULL,
+    reservation_time TEXT NOT NULL,
+    guests INTEGER NOT NULL,
+    table_type TEXT,
+    special_requests TEXT,
+    status TEXT DEFAULT 'PENDING',
+    table_id INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (table_id) REFERENCES tables_reservations(id) ON DELETE SET NULL
+  );
 `);
 
 // Insert sample data if tables are empty

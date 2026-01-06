@@ -30,7 +30,7 @@ export class LoginComponent {
       const token = await cred.user.getIdToken();
       localStorage.setItem("token", token);
 
-      this.router.navigate(["/reservations"]);
+      this.router.navigate(["/reserve"]);
     } catch (e) {
       this.error = "Login failed";
     }
