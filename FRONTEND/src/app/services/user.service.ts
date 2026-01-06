@@ -26,4 +26,9 @@ export class UserService {
       `${this.baseUrl}/${id}`
     );
   }
+
+  // GET /api/users/me
+  getCurrentUser(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/me`);
+  }
 }

@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReservationService } from '../../services/reservation.service';
+import { Subject, interval, takeUntil } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -10,10 +11,11 @@ import { ReservationService } from '../../services/reservation.service';
   styleUrls: ['./reservation.component.css'],
   imports: [CommonModule, FormsModule]
 })
-export class ReservationComponent implements OnInit {
+export class ReservationComponent implements OnInit, OnDestroy {
 
   loading = false;
   reservationsList: any[] = [];
+  private destroy$ = new Subject<void>();
 
   form = {
     name: '',
@@ -30,6 +32,14 @@ export class ReservationComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchReservations();
+    interval(5000).pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.fetchReservations();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   /* ---------------- FETCH ---------------- */
@@ -49,7 +59,8 @@ export class ReservationComponent implements OnInit {
           guests: res.guests,
           tableType: res.table_type,
           notes: res.special_requests,
-          status: (res.status || '').toUpperCase()
+          status: (res.status || '').toUpperCase(),
+          table_number: res.table_number
         }));
         this.loading = false;
       },

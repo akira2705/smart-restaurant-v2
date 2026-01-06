@@ -7,7 +7,7 @@ import { environment } from '../../environments/environment';
 })
 export class ReservationService {
 
-  private api = `${environment.apiBaseUrl}/reservations`;
+  private api = `${environment.apiBaseUrl}/api/reservations`;
 
   constructor(private http: HttpClient) {}
 
@@ -23,8 +23,7 @@ export class ReservationService {
     return this.http.post(`${this.api}/${id}/confirm`, {});
   }
   cancelReservation(id: number) {
-    return this.http.delete(`${this.api}/${id}`);
+    return this.http.post(`${this.api}/${id}/cancel`, {});
 }
 
 }
-
