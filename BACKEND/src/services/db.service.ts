@@ -25,6 +25,23 @@ db.exec(`
   );
 `);
 
+const tableCount = db
+  .prepare("SELECT COUNT(*) as count FROM tables_reservations")
+  .get() as { count: number };
+
+if (tableCount.count === 0) {
+  const insertTable = db.prepare(
+    "INSERT INTO tables_reservations (table_number, capacity, type, status) VALUES (?, ?, ?, ?)"
+  );
+
+  insertTable.run(1, 2, "REGULAR", "AVAILABLE");
+  insertTable.run(2, 2, "REGULAR", "AVAILABLE");
+  insertTable.run(3, 4, "REGULAR", "AVAILABLE");
+  insertTable.run(4, 4, "REGULAR", "RESERVED");
+  insertTable.run(5, 6, "LARGE", "AVAILABLE");
+  insertTable.run(6, 8, "LARGE", "OCCUPIED");
+}
+
 // Export a wrapper to make it compatible with mysql2/promise interface
 export const dbQuery = (sql: string, params: any[] = []) => {
   try {
