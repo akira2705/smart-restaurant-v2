@@ -5,6 +5,8 @@ import {
   confirmReservation,
   cancelReservation
 } from "../controllers/reservation.controller";
+import firebaseAuth from "../middlewares/firebaseAuth.middleware";
+import { requireRole } from "../middlewares/role.middleware";
 
 
 const router = Router();
@@ -16,6 +18,8 @@ router.get("/", getReservations);
 // MANAGER ONLY
 router.post(
   "/:id/confirm",
+  firebaseAuth,
+  requireRole("MANAGER"),
   confirmReservation
 );
 
