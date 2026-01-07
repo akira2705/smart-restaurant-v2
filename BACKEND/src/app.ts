@@ -12,7 +12,7 @@ import reservationRoutes from "./routes/reservation.routes";
 import managerRoutes from "./routes/manager.routes";
 
 
-const app: Application = express();
+export const app: Application = express();
 
 dbService.initializeDatabase().catch((error: unknown) => {
 initializeDatabase().catch((error: unknown) => {
@@ -37,4 +37,3 @@ app.get("/", (req, res) => {
 });
 
 app.use(errorHandler);
-export default app;
