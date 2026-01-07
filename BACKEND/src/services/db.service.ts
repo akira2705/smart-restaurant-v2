@@ -8,6 +8,17 @@ export const db = new Database(dbPath);
 db.pragma("foreign_keys = ON");
 
 db.exec(`
+  CREATE TABLE IF NOT EXISTS tables_reservations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    table_number INTEGER NOT NULL UNIQUE,
+    capacity INTEGER NOT NULL,
+    type TEXT DEFAULT 'REGULAR',
+    status TEXT DEFAULT 'AVAILABLE',
+    current_customer_id INTEGER,
+    reservation_time DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS reservations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
