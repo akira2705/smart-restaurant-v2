@@ -3,7 +3,7 @@ dotenv.config();
 
 import express, { Application } from "express";
 import cors from "cors";
-import { initializeDatabase } from "./services/db.service";
+import dbService from "./services/db.service";
 import userRoutes from "./routes/user.routes";
 import tableRoutes from "./routes/table.routes";
 import queueRoutes from "./routes/queue.routes";
@@ -14,6 +14,7 @@ import managerRoutes from "./routes/manager.routes";
 
 const app: Application = express();
 
+dbService.initializeDatabase().catch((error: unknown) => {
 initializeDatabase().catch((error: unknown) => {
   console.error("Database initialization failed", error);
 });

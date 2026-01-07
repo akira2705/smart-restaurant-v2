@@ -81,4 +81,11 @@ const initializeDatabase = async () => {
   `);
 };
 
+const dbService = {
+  pool,
+  dbQuery,
+  initializeDatabase
+};
+
+export default dbService;
 export { pool, dbQuery, initializeDatabase };
