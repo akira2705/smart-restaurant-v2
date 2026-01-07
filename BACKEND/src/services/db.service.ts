@@ -3,7 +3,7 @@ import mysql from "mysql2/promise";
 export const pool = mysql.createPool({
   host: process.env.MYSQL_HOST || process.env.DB_HOST || "localhost",
   user: process.env.MYSQL_USER || process.env.DB_USER || "root",
-  password: process.env.MYSQL_PASSWORD || process.env.DB_PASS || "",
+  password: process.env.MYSQL_PASSWORD || process.env.DB_PASS || "root",
   database: process.env.MYSQL_DATABASE || process.env.DB_NAME || "restaurant_db",
   port: Number(process.env.MYSQL_PORT || process.env.DB_PORT || 3306),
   waitForConnections: true,
@@ -11,6 +11,9 @@ export const pool = mysql.createPool({
   queueLimit: 0
 });
 
+type DbQueryParams = Array<string | number | boolean | null | Date>;
+
+export const dbQuery = async <T>(query: string, params: DbQueryParams = []) => {
 export const dbQuery = async <T>(query: string, params: unknown[] = []) => {
   const [rows] = await pool.execute(query, params);
   return rows as T;
