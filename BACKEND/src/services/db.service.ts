@@ -1,6 +1,6 @@
 import mysql from "mysql2/promise";
 
-export const pool = mysql.createPool({
+const pool = mysql.createPool({
   host: process.env.MYSQL_HOST || process.env.DB_HOST || "localhost",
   user: process.env.MYSQL_USER || process.env.DB_USER || "root",
   password: process.env.MYSQL_PASSWORD || process.env.DB_PASS || "root",
@@ -13,13 +13,14 @@ export const pool = mysql.createPool({
 
 type DbQueryParams = Array<string | number | boolean | null | Date>;
 
+const dbQuery = async <T>(query: string, params: DbQueryParams = []) => {
 export const dbQuery = async <T>(query: string, params: DbQueryParams = []) => {
 export const dbQuery = async <T>(query: string, params: unknown[] = []) => {
   const [rows] = await pool.execute(query, params);
   return rows as T;
 };
 
-export const initializeDatabase = async () => {
+const initializeDatabase = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -78,3 +79,5 @@ export const initializeDatabase = async () => {
     )
   `);
 };
+
+export { pool, dbQuery, initializeDatabase };
