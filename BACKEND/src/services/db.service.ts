@@ -11,9 +11,7 @@ export const pool = mysql.createPool({
   queueLimit: 0
 });
 
-type DbQueryParams = Array<string | number | boolean | null | Date>;
-
-export const dbQuery = async <T>(query: string, params: DbQueryParams = []) => {
+export const dbQuery = async <T>(query: string, params: unknown[] = []) => {
   const [rows] = await pool.execute(query, params);
   return rows as T;
 };
