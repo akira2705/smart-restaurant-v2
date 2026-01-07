@@ -12,6 +12,11 @@
   background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFB 100%);
   border-radius: 12px;
   border: 1px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
 }
 
 .header-content {
@@ -30,6 +35,76 @@
   font-size: 16px;
   color: #6B7280;
   font-weight: 400;
+}
+
+.table-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.action-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.action-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4B5563;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.action-field input,
+.action-field select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #D1D5DB;
+  background-color: #FFFFFF;
+  font-size: 14px;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.action-field input:focus,
+.action-field select:focus {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+}
+
+.add-table-btn {
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: none;
+  background: #7C3AED;
+  color: #FFFFFF;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.add-table-btn:disabled {
+  cursor: not-allowed;
+  background: #C4B5FD;
+  box-shadow: none;
+}
+
+.add-table-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(124, 58, 237, 0.25);
+}
+
+.form-error {
+  width: 100%;
+  margin: 0;
+  font-size: 13px;
+  color: #DC2626;
 }
 
 .loading-state {

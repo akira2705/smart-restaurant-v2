@@ -5,6 +5,29 @@
       <h1>Restaurant Floor Plan</h1>
       <p>Visual layout of table arrangement and availability</p>
     </div>
+    <div class="table-actions">
+      <div class="action-field">
+        <label for="table-capacity">No. of Customers</label>
+        <input
+          id="table-capacity"
+          type="number"
+          min="1"
+          [(ngModel)]="newTableCapacity"
+        />
+      </div>
+      <div class="action-field">
+        <label for="table-type">Table Type</label>
+        <select id="table-type" [(ngModel)]="newTableType">
+          <option value="REGULAR">Regular</option>
+          <option value="LARGE">Large</option>
+          <option value="VIP">VIP</option>
+        </select>
+      </div>
+      <button class="add-table-btn" (click)="addTable()" [disabled]="isCreating">
+        {{ isCreating ? 'Adding...' : 'Add Table' }}
+      </button>
+      <p *ngIf="createError" class="form-error">{{ createError }}</p>
+    </div>
   </section>
 
   <div *ngIf="loading" class="loading-state">
