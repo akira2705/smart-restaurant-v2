@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { db } from "../services/db.service";
+import { ResultSetHeader } from "mysql2/promise";
+import { dbQuery } from "../services/db.service";
 import { AuthRequest } from "../middlewares/firebaseAuth.middleware";
 
 export const createUser = async (req: Request, res: Response) => {
@@ -10,14 +11,14 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Name and role are required" });
     }
 
-    const stmt = db.prepare(
-      "INSERT INTO users (name, email, phone, role, contact_info) VALUES (?, ?, ?, ?, ?)"
+    const result = await dbQuery<ResultSetHeader>(
+      "INSERT INTO users (name, email, phone, role, contact_info) VALUES (?, ?, ?, ?, ?)",
+      [name, email || null, phone || null, role, contact_info || null]
     );
-    const result = stmt.run(name, email || null, phone || null, role, contact_info || null);
 
     return res.status(201).json({
       message: "User created successfully",
-      userId: result.lastInsertRowid
+      userId: result.insertId
     });
   } catch (error: any) {
     return res.status(500).json({
@@ -31,10 +32,11 @@ export const getUserById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const stmt = db.prepare(
-      "SELECT id, name, role, contact_info, created_at FROM users WHERE id = ?"
+    const rows = await dbQuery<any[]>(
+      "SELECT id, name, role, contact_info, created_at FROM users WHERE id = ?",
+      [id]
     );
-    const row = stmt.get(id);
+    const row = rows[0];
 
     if (!row) {
       return res.status(404).json({ message: "User not found" });
@@ -55,10 +57,11 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const stmt = db.prepare(
-      "SELECT id, name, email, role, contact_info, created_at FROM users WHERE email = ?"
+    const rows = await dbQuery<any[]>(
+      "SELECT id, name, email, role, contact_info, created_at FROM users WHERE email = ?",
+      [req.user.email]
     );
-    const row = stmt.get(req.user.email);
+    const row = rows[0];
 
     if (!row) {
       return res.status(404).json({ message: "User not found" });

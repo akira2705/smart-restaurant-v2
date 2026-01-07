@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { TableService } from '../../services/table.service';
 import { Subject, interval, takeUntil } from 'rxjs';
@@ -7,7 +8,7 @@ import { Subject, interval, takeUntil } from 'rxjs';
 @Component({
   standalone: true,
   selector: 'app-tables',
-  imports: [CommonModule, MatCardModule],
+  imports: [CommonModule, FormsModule, MatCardModule],
   templateUrl: './tables.component.html',
   styleUrls: ['./tables.component.css']
 })
@@ -16,6 +17,10 @@ export class TablesComponent implements OnInit, OnDestroy {
   tables: any[] = [];
   loading = true;
   selectedTable: any = null;
+  newTableCapacity = 2;
+  newTableType = 'REGULAR';
+  isCreating = false;
+  createError = '';
   private destroy$ = new Subject<void>();
 
   constructor(private tableService: TableService) {}
@@ -88,5 +93,34 @@ export class TablesComponent implements OnInit, OnDestroy {
       case 'OCCUPIED': return 'occupied';
       default: return '';
     }
+  }
+
+  addTable(): void {
+    if (!this.newTableCapacity || this.newTableCapacity <= 0) {
+      this.createError = 'Enter a valid number of customers.';
+      return;
+    }
+
+    const nextTableNumber = this.tables.length > 0
+      ? Math.max(...this.tables.map((table) => table.table_number)) + 1
+      : 1;
+
+    this.isCreating = true;
+    this.createError = '';
+
+    this.tableService.createTable({
+      table_number: nextTableNumber,
+      capacity: this.newTableCapacity,
+      type: this.newTableType
+    }).subscribe({
+      next: () => {
+        this.isCreating = false;
+        this.fetchTables();
+      },
+      error: () => {
+        this.isCreating = false;
+        this.createError = 'Failed to create table. Please try again.';
+      }
+    });
   }
 }

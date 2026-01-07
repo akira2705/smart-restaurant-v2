@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import admin from "firebase-admin";
-import { db } from "../services/db.service";
+import { ResultSetHeader } from "mysql2/promise";
+import { dbQuery } from "../services/db.service";
 
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -37,15 +38,18 @@ export default async function firebaseAuth(
       return res.status(401).json({ message: 'Invalid token' });
     }
 
-    let user = db
-      .prepare(`SELECT role, name FROM users WHERE email = ?`)
-      .get(email) as { role: 'USER' | 'MANAGER'; name: string } | undefined;
+    const userRows = await dbQuery<Array<{ role: 'USER' | 'MANAGER'; name: string }>>(
+      `SELECT role, name FROM users WHERE email = ?`,
+      [email]
+    );
+    let user = userRows[0];
 
     if (!user) {
       const fallbackName = decoded.name || email.split("@")[0] || "Guest";
-      db.prepare(
-        `INSERT INTO users (name, email, role) VALUES (?, ?, ?)`
-      ).run(fallbackName, email, "USER");
+      await dbQuery<ResultSetHeader>(
+        `INSERT INTO users (name, email, role) VALUES (?, ?, ?)`,
+        [fallbackName, email, "USER"]
+      );
       user = { role: "USER", name: fallbackName };
     }
 
