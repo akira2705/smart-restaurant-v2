@@ -7,6 +7,15 @@ import { QueueService } from '../../services/queue.service';
 import { UserService } from '../../services/user.service';
 import { Subject, interval, takeUntil } from 'rxjs';
 
+interface QueueItem {
+  id: number;
+  user_id: number;
+  user_name?: string;
+  party_size: number;
+  status: string;
+  joined_at: string;
+}
+
 @Component({
   standalone: true,
   selector: 'app-queue',
@@ -15,10 +24,9 @@ import { Subject, interval, takeUntil } from 'rxjs';
   styleUrls: ['./queue.component.css']
 })
 export class QueueComponent implements OnInit, OnDestroy {
-
   loading = false;
-  queueList: any[] = [];
-  currentUser: any = null;
+  queueList: QueueItem[] = [];
+  currentUser: { id: number } | null = null;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -30,9 +38,11 @@ export class QueueComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadCurrentUser();
     this.fetchQueueList();
-    interval(5000).pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.fetchQueueList();
-    });
+    interval(5000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.fetchQueueList();
+      });
   }
 
   ngOnDestroy(): void {
@@ -54,7 +64,7 @@ export class QueueComponent implements OnInit, OnDestroy {
   fetchQueueList(): void {
     this.loading = true;
     this.queueService.getQueue().subscribe({
-      next: (res: any) => {
+      next: (res: { data?: QueueItem[] }) => {
         this.queueList = res.data || [];
         this.loading = false;
       },
@@ -75,13 +85,14 @@ export class QueueComponent implements OnInit, OnDestroy {
     const payload = {
       party_size: 4,
       name: `Guest ${this.queueList.length + 1}`
-      party_size: 4
     };
 
     this.queueService.joinQueue(payload).subscribe({
-      next: (res: any) => {
+      next: () => {
         this.loading = false;
-        this.snackBar.open('Successfully added to queue!', 'OK', { duration: 3000 });
+        this.snackBar.open('Successfully added to queue!', 'OK', {
+          duration: 3000
+        });
         this.fetchQueueList();
       },
       error: (err: any) => {
@@ -94,12 +105,12 @@ export class QueueComponent implements OnInit, OnDestroy {
 
   leaveQueue(): void {
     this.loading = true;
-    const targetId = this.queueList[0]?.id;
-    this.queueService.leaveQueue({ queue_id: targetId }).subscribe({
     this.queueService.leaveQueue().subscribe({
       next: (res: any) => {
         this.loading = false;
-        this.snackBar.open(res.message || 'Left the queue', 'OK', { duration: 3000 });
+        this.snackBar.open(res.message || 'Left the queue', 'OK', {
+          duration: 3000
+        });
         this.fetchQueueList();
       },
       error: (err: any) => {
@@ -111,14 +122,18 @@ export class QueueComponent implements OnInit, OnDestroy {
   }
 
   canLeaveQueue(): boolean {
-    return this.queueList.length > 0;
-  isCurrentUserInQueue(): boolean {
-    if (!this.currentUser) return false;
-    return this.queueList.some(item => item.user_id === this.currentUser.id);
+    return this.isCurrentUserInQueue();
   }
 
-  callCustomer(item: any): void {
-    this.snackBar.open(`Called ${item.customer_name || 'Guest'}`, 'OK', { duration: 2000 });
+  isCurrentUserInQueue(): boolean {
+    if (!this.currentUser) return false;
+    return this.queueList.some((item) => item.user_id === this.currentUser?.id);
+  }
+
+  callCustomer(item: QueueItem): void {
+    this.snackBar.open(`Called ${item.user_name || 'Guest'}`, 'OK', {
+      duration: 2000
+    });
   }
 
   getTotalQueueCount(): number {
