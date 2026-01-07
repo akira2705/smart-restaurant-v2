@@ -15,6 +15,7 @@ import managerRoutes from "./routes/manager.routes";
 const app: Application = express();
 
 dbService.initializeDatabase().catch((error: unknown) => {
+initializeDatabase().catch((error: unknown) => {
   console.error("Database initialization failed", error);
 });
 
