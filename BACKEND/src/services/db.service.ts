@@ -13,6 +13,7 @@ const pool = mysql.createPool({
 
 type DbQueryParams = Array<string | number | boolean | null | Date>;
 
+export const dbQuery = async <T>(query: string, params: DbQueryParams = []) => {
 const dbQuery = async <T>(query: string, params: DbQueryParams = []) => {
 export const dbQuery = async <T>(query: string, params: DbQueryParams = []) => {
 export const dbQuery = async <T>(query: string, params: unknown[] = []) => {
