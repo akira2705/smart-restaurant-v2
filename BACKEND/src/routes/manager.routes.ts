@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "../services/db.service";
+import { dbQuery } from "../services/db.service";
 
 const router = Router();
 
@@ -8,45 +8,43 @@ const router = Router();
 */
 router.get(
   "/dashboard",
-  (req, res) => {
-
-    const totalTables = (
-      db.prepare(
+  async (_req, res) => {
+    try {
+      const totalRows = await dbQuery<Array<{ count: number }>>(
         "SELECT COUNT(*) as count FROM tables_reservations"
-      ).get() as { count: number }
-    ).count;
-
-    const availableTables = (
-      db.prepare(
+      );
+      const availableRows = await dbQuery<Array<{ count: number }>>(
         "SELECT COUNT(*) as count FROM tables_reservations WHERE status = 'AVAILABLE'"
-      ).get() as { count: number }
-    ).count;
-
-    const reservedTables = (
-      db.prepare(
+      );
+      const reservedRows = await dbQuery<Array<{ count: number }>>(
         "SELECT COUNT(*) as count FROM tables_reservations WHERE status = 'RESERVED'"
-      ).get() as { count: number }
-    ).count;
-
-    const occupiedTables = (
-      db.prepare(
+      );
+      const occupiedRows = await dbQuery<Array<{ count: number }>>(
         "SELECT COUNT(*) as count FROM tables_reservations WHERE status = 'OCCUPIED'"
-      ).get() as { count: number }
-    ).count;
-
-    const pendingReservations = (
-      db.prepare(
+      );
+      const pendingRows = await dbQuery<Array<{ count: number }>>(
         "SELECT COUNT(*) as count FROM reservations WHERE status = 'PENDING'"
-      ).get() as { count: number }
-    ).count;
+      );
 
-    res.json({
-      totalTables,
-      availableTables,
-      reservedTables,
-      occupiedTables,
-      pendingReservations
-    });
+      const totalTables = totalRows[0]?.count ?? 0;
+      const availableTables = availableRows[0]?.count ?? 0;
+      const reservedTables = reservedRows[0]?.count ?? 0;
+      const occupiedTables = occupiedRows[0]?.count ?? 0;
+      const pendingReservations = pendingRows[0]?.count ?? 0;
+
+      res.json({
+        totalTables,
+        availableTables,
+        reservedTables,
+        occupiedTables,
+        pendingReservations
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        message: "Failed to fetch manager dashboard metrics",
+        error: error.message
+      });
+    }
   }
 );
 

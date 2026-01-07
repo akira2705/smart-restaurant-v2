@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { db } from "../services/db.service";
+import { ResultSetHeader } from "mysql2/promise";
+import { dbQuery } from "../services/db.service";
 
 export const createTable = async (req: Request, res: Response) => {
   try {
@@ -12,14 +13,14 @@ export const createTable = async (req: Request, res: Response) => {
       });
     }
 
-    const stmt = db.prepare(
-      "INSERT INTO tables_reservations (table_number, capacity, type) VALUES (?, ?, ?)"
+    const result = await dbQuery<ResultSetHeader>(
+      "INSERT INTO tables_reservations (table_number, capacity, type) VALUES (?, ?, ?)",
+      [table_number, capacity, type || "REGULAR"]
     );
-    const result = stmt.run(table_number, capacity, type || "REGULAR");
 
     return res.status(201).json({
       message: "Table created successfully",
-      tableId: result.lastInsertRowid
+      tableId: result.insertId
     });
   } catch (error: any) {
     return res.status(500).json({
@@ -31,10 +32,9 @@ export const createTable = async (req: Request, res: Response) => {
 
 export const getAllTables = async (req: Request, res: Response) => {
   try {
-    const stmt = db.prepare(
+    const rows = await dbQuery<any[]>(
       "SELECT id, table_number, capacity, type, status, current_customer_id FROM tables_reservations ORDER BY table_number"
     );
-    const rows = stmt.all();
 
     return res.status(200).json(rows);
   } catch (error: any) {
@@ -59,12 +59,12 @@ export const updateTableStatus = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid table status" });
     }
 
-    const stmt = db.prepare(
-      "UPDATE tables_reservations SET status = ? WHERE id = ?"
+    const result = await dbQuery<ResultSetHeader>(
+      "UPDATE tables_reservations SET status = ? WHERE id = ?",
+      [status, id]
     );
-    const result = stmt.run(status, id);
 
-    if (result.changes === 0) {
+    if (result.affectedRows === 0) {
       return res.status(404).json({ message: "Table not found" });
     }
 
@@ -90,10 +90,11 @@ export const reserveTable = async (req: Request, res: Response) => {
     }
 
     // Check table availability
-    const stmt = db.prepare(
-      "SELECT status FROM tables_reservations WHERE id = ?"
+    const rows = await dbQuery<any[]>(
+      "SELECT status FROM tables_reservations WHERE id = ?",
+      [table_id]
     );
-    const row: any = stmt.get(table_id);
+    const row = rows[0];
 
     if (!row) {
       return res.status(404).json({ message: "Table not found" });
@@ -106,14 +107,14 @@ export const reserveTable = async (req: Request, res: Response) => {
     }
 
     // Reserve table
-    const updateStmt = db.prepare(
+    await dbQuery<ResultSetHeader>(
       `UPDATE tables_reservations
        SET status = 'RESERVED',
            current_customer_id = ?,
            reservation_time = ?
-       WHERE id = ?`
+       WHERE id = ?`,
+      [user_id, reservation_time, table_id]
     );
-    updateStmt.run(user_id, reservation_time, table_id);
 
     return res.status(200).json({
       message: "Table reserved successfully"
@@ -132,10 +133,11 @@ export const cancelReservation = async (req: Request, res: Response) => {
     const { table_id } = req.params;
 
     // Check table state
-    const stmt = db.prepare(
-      "SELECT status FROM tables_reservations WHERE id = ?"
+    const rows = await dbQuery<any[]>(
+      "SELECT status FROM tables_reservations WHERE id = ?",
+      [table_id]
     );
-    const row: any = stmt.get(table_id);
+    const row = rows[0];
 
     if (!row) {
       return res.status(404).json({ message: "Table not found" });
@@ -148,14 +150,14 @@ export const cancelReservation = async (req: Request, res: Response) => {
     }
 
     // Cancel reservation
-    const updateStmt = db.prepare(
+    await dbQuery<ResultSetHeader>(
       `UPDATE tables_reservations
        SET status = 'AVAILABLE',
            current_customer_id = NULL,
            reservation_time = NULL
-       WHERE id = ?`
+       WHERE id = ?`,
+      [table_id]
     );
-    updateStmt.run(table_id);
 
     return res.status(200).json({
       message: "Reservation cancelled successfully"

@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
-import { db } from "../services/db.service";
+import { ResultSetHeader } from "mysql2/promise";
+import { dbQuery } from "../services/db.service";
 
 /* ---------------- CREATE RESERVATION ---------------- */
 
-export const createReservation = (req: Request, res: Response) => {
+export const createReservation = async (req: Request, res: Response) => {
   try {
     const {
       name,
@@ -16,24 +17,16 @@ export const createReservation = (req: Request, res: Response) => {
       specialRequests
     } = req.body;
 
-    const stmt = db.prepare(`
+    const result = await dbQuery<ResultSetHeader>(
+      `
       INSERT INTO reservations
       (name, email, phone, reservation_date, reservation_time, guests, table_type, special_requests, status, table_id)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', NULL)
-    `);
-
-    const result = stmt.run(
-      name,
-      email,
-      phone,
-      date,
-      time,
-      guests,
-      tableType,
-      specialRequests
+    `,
+      [name, email, phone, date, time, guests, tableType, specialRequests]
     );
 
-    res.status(201).json({ id: result.lastInsertRowid });
+    res.status(201).json({ id: result.insertId });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to create reservation" });
@@ -42,9 +35,10 @@ export const createReservation = (req: Request, res: Response) => {
 
 /* ---------------- GET RESERVATIONS ---------------- */
 
-export const getReservations = (_req: Request, res: Response) => {
+export const getReservations = async (_req: Request, res: Response) => {
   try {
-    const stmt = db.prepare(`
+    const rows = await dbQuery<any[]>(
+      `
       SELECT
         reservations.*,
         tables_reservations.table_number
@@ -52,9 +46,8 @@ export const getReservations = (_req: Request, res: Response) => {
       LEFT JOIN tables_reservations
         ON tables_reservations.id = reservations.table_id
       ORDER BY reservation_date, reservation_time
-    `);
-
-    const rows = stmt.all();
+    `
+    );
 
     res.json(rows);
   } catch (error) {
@@ -64,15 +57,21 @@ export const getReservations = (_req: Request, res: Response) => {
 };
 
 
-export const confirmReservation = (req: Request, res: Response) => {
+export const confirmReservation = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const reservation = db.prepare(`
+    const reservationRows = await dbQuery<
+      Array<{ id: number; guests: number; status: string }>
+    >(
+      `
       SELECT id, guests, status
       FROM reservations
       WHERE id = ?
-    `).get(id) as { id: number; guests: number; status: string } | undefined;
+    `,
+      [id]
+    );
+    const reservation = reservationRows[0];
 
     if (!reservation) {
       return res.status(404).json({ message: "Reservation not found" });
@@ -87,30 +86,40 @@ export const confirmReservation = (req: Request, res: Response) => {
     }
 
     // find suitable table
-    const table = db.prepare(`
+    const tableRows = await dbQuery<Array<{ id: number; table_number: number }>>(
+      `
       SELECT id, table_number FROM tables_reservations
       WHERE status = 'AVAILABLE' AND capacity >= ?
       ORDER BY capacity ASC
       LIMIT 1
-    `).get(reservation.guests) as { id: number; table_number: number } | undefined;
+    `,
+      [reservation.guests]
+    );
+    const table = tableRows[0];
 
     if (!table) {
       return res.status(400).json({ message: "No available table" });
     }
 
     // reserve table
-    db.prepare(`
+    await dbQuery<ResultSetHeader>(
+      `
       UPDATE tables_reservations
       SET status = 'RESERVED'
       WHERE id = ?
-    `).run(table.id);
+    `,
+      [table.id]
+    );
 
     // confirm reservation
-    db.prepare(`
+    await dbQuery<ResultSetHeader>(
+      `
       UPDATE reservations
       SET status = 'CONFIRMED', table_id = ?
       WHERE id = ?
-    `).run(table.id, id);
+    `,
+      [table.id, id]
+    );
 
     res.json({
       message: "Reservation confirmed",
@@ -123,15 +132,21 @@ export const confirmReservation = (req: Request, res: Response) => {
   }
 };
 
-export const cancelReservation = (req: Request, res: Response) => {
+export const cancelReservation = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const reservation = db.prepare(`
+    const reservationRows = await dbQuery<
+      Array<{ id: number; table_id: number | null; status: string }>
+    >(
+      `
       SELECT id, table_id, status
       FROM reservations
       WHERE id = ?
-    `).get(id) as { id: number; table_id: number | null; status: string } | undefined;
+    `,
+      [id]
+    );
+    const reservation = reservationRows[0];
 
     if (!reservation) {
       return res.status(404).json({ message: "Reservation not found" });
@@ -142,19 +157,25 @@ export const cancelReservation = (req: Request, res: Response) => {
     }
 
     if (reservation.table_id) {
-      db.prepare(`
+      await dbQuery<ResultSetHeader>(
+        `
         UPDATE tables_reservations
         SET status = 'AVAILABLE'
         WHERE id = ?
-      `).run(reservation.table_id);
+      `,
+        [reservation.table_id]
+      );
     }
 
-    db.prepare(`
+    await dbQuery<ResultSetHeader>(
+      `
       UPDATE reservations
       SET status = 'CANCELLED',
           table_id = NULL
       WHERE id = ?
-    `).run(id);
+    `,
+      [id]
+    );
 
     res.json({ message: "Reservation cancelled" });
   } catch (err) {
